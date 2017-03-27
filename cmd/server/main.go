@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"bargo"
+	"time"
 )
 
 // 服务端端口
@@ -67,12 +68,11 @@ func onConnection(conn net.Conn)  {
 	defer remoteConn.Close()
 	// 代理
 	proxy(conn, remoteConn)
-	return
 }
 
 // 代理
-func proxy(conn, remoteConn net.Conn) error {
-	errCh := make(chan error,2)
+func proxy(conn, remoteConn net.Conn) {
+	errCh := make(chan error, 2)
 
 	go func() {
 		_, err := bargo.DecryptCopy(remoteConn, conn, encryptor)
@@ -88,12 +88,7 @@ func proxy(conn, remoteConn net.Conn) error {
 		}
 	}()
 
-	for i:=0; i<2; i++ {
-		err := <-errCh
-		return err
-	}
-
-	return nil
+	<- errCh
 }
 
 // 建立远程连接
@@ -109,7 +104,7 @@ func linkRemoteConn(conn net.Conn) (net.Conn,error) {
 	}
 
 	// 建立远程连接
-	remoteConn, err := net.Dial("tcp", fmt.Sprintf("%v:%v", socks5Head.Addr, socks5Head.Port))
+	remoteConn, err := net.DialTimeout("tcp", fmt.Sprintf("%v:%v", socks5Head.Addr, socks5Head.Port), 5 * time.Second)
 	if err != nil {
 		return nil, err
 	}

@@ -1,12 +1,8 @@
 package bargo
 
 import (
-	"errors"
 	"io"
 )
-
-// ErrEOF 错误
-var ErrEOF = errors.New("EOF")
 
 var protocol = Protocol{}
 
@@ -33,7 +29,7 @@ func DecryptCopy(dst io.Writer, src io.Reader, encryptor *Encryptor) (written in
 
 // EncryptCopy 加密转发
 func EncryptCopy(dst io.Writer, src io.Reader, encryptor *Encryptor) (written int64, err error) {
-	buf := make([]byte, 5 * 1024)
+	buf := make([]byte, 4096)
 	for {
 		nr, er := src.Read(buf)
 		if nr > 0 {
@@ -46,9 +42,6 @@ func EncryptCopy(dst io.Writer, src io.Reader, encryptor *Encryptor) (written in
 				err = ew
 				break
 			}
-		}
-		if er == ErrEOF {
-			break
 		}
 		if er != nil {
 			err = er
