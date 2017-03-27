@@ -1,14 +1,26 @@
 package bargo
 
 import (
-	"io"
+	"net"
+	"time"
 )
 
+// 传输协议
 var protocol = Protocol{}
+// 允许连接空闲时间
+const CONNECT_IDLE_TIME = 30 * time.Second
 
 // DecryptCopy 解密转发
-func DecryptCopy(dst io.Writer, src io.Reader, encryptor *Encryptor) (written int64, err error) {
+func DecryptCopy(dst net.Conn, src net.Conn, encryptor *Encryptor) (written int64, err error) {
 	for {
+		err := src.SetDeadline(time.Now().Add(CONNECT_IDLE_TIME))
+		if err != nil {
+			return 0, err
+		}
+		err = dst.SetDeadline(time.Now().Add(CONNECT_IDLE_TIME))
+		if err != nil {
+			return 0, err
+		}
 		data, err := protocol.Decode(src)
 		if err != nil {
 			return 0, err
@@ -28,9 +40,17 @@ func DecryptCopy(dst io.Writer, src io.Reader, encryptor *Encryptor) (written in
 }
 
 // EncryptCopy 加密转发
-func EncryptCopy(dst io.Writer, src io.Reader, encryptor *Encryptor) (written int64, err error) {
+func EncryptCopy(dst net.Conn, src net.Conn, encryptor *Encryptor) (written int64, err error) {
 	buf := make([]byte, 4096)
 	for {
+		err := src.SetDeadline(time.Now().Add(CONNECT_IDLE_TIME))
+		if err != nil {
+			return 0, err
+		}
+		err = dst.SetDeadline(time.Now().Add(CONNECT_IDLE_TIME))
+		if err != nil {
+			return 0, err
+		}
 		nr, er := src.Read(buf)
 		if nr > 0 {
 			data := protocol.Encode(encryptor.Encrypt(buf[0:nr]))
