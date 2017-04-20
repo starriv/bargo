@@ -13,7 +13,7 @@ const CONNECT_IDLE_TIME = 30 * time.Second
 // DecryptCopy 解密转发
 func DecryptCopy(dst net.Conn, src net.Conn, encryptor *Encryptor) (written int64, err error) {
 	for {
-		err := src.SetDeadline(time.Now().Add(CONNECT_IDLE_TIME))
+		err = src.SetDeadline(time.Now().Add(CONNECT_IDLE_TIME))
 		if err != nil {
 			return 0, err
 		}
@@ -43,7 +43,7 @@ func DecryptCopy(dst net.Conn, src net.Conn, encryptor *Encryptor) (written int6
 func EncryptCopy(dst net.Conn, src net.Conn, encryptor *Encryptor) (written int64, err error) {
 	buf := make([]byte, 4096)
 	for {
-		err := src.SetDeadline(time.Now().Add(CONNECT_IDLE_TIME))
+		err = src.SetDeadline(time.Now().Add(CONNECT_IDLE_TIME))
 		if err != nil {
 			return 0, err
 		}

@@ -7,6 +7,7 @@ import (
 	"net"
 	"bargo"
 	"time"
+	"sync"
 )
 
 // 服务端端口
@@ -72,23 +73,23 @@ func onConnection(conn net.Conn)  {
 
 // 代理
 func proxy(conn, remoteConn net.Conn) {
-	errCh := make(chan error, 2)
-
+	wg := sync.WaitGroup{}
+	wg.Add(2)
 	go func() {
 		_, err := bargo.DecryptCopy(remoteConn, conn, encryptor)
 		if err != nil {
-			errCh <- err
+			wg.Done()
 		}
 	}()
 
 	go func() {
 		_, err := bargo.EncryptCopy(conn, remoteConn, encryptor)
 		if err != nil {
-			errCh <- err
+			wg.Done()
 		}
 	}()
 
-	<- errCh
+	wg.Wait()
 }
 
 // 建立远程连接
