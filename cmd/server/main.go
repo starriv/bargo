@@ -61,6 +61,11 @@ func Start()  {
 
 // 处理每个连接
 func onConnection(conn net.Conn)  {
+	defer func() {
+		if err := recover(); err != nil {
+			bargo.Log(err)
+		}
+	}()
 	defer conn.Close()
 	remoteConn, err := linkRemoteConn(conn)
 	if err != nil {

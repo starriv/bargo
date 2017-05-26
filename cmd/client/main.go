@@ -84,6 +84,11 @@ func startTcpServer() {
 
 // 处理链接
 func onConnection(conn net.Conn) {
+	defer func() {
+		if err := recover(); err != nil {
+			bargo.Log(err)
+		}
+	}()
 	defer conn.Close()
 	// socks5版本验证
 	err := checkVersion(conn)
