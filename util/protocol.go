@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"io"
 	"net"
-	"sync"
 	"time"
 )
 
@@ -56,8 +55,6 @@ func (p *Protocol) Decode(read io.Reader) ([]byte, error) {
 
 // 转发数据
 func (p *Protocol) Pipe(decryptRead, normalRead net.Conn) {
-	wg := &sync.WaitGroup{}
-	wg.Add(2)
 	go func() {
 		for {
 			err := decryptRead.SetDeadline(time.Now().Add(60 *time.Second))
@@ -77,33 +74,27 @@ func (p *Protocol) Pipe(decryptRead, normalRead net.Conn) {
 				break
 			}
 		}
-		wg.Done()
 	}()
 
-	go func() {
-		buf := make([]byte, 4096)
-		for {
-			err := decryptRead.SetDeadline(time.Now().Add(60 *time.Second))
+	buf := make([]byte, 4096)
+	for {
+		err := decryptRead.SetDeadline(time.Now().Add(60 *time.Second))
+		if err != nil {
+			break
+		}
+		err = normalRead.SetDeadline(time.Now().Add(60 *time.Second))
+		if err != nil {
+			break
+		}
+		nr, err := normalRead.Read(buf)
+		if err != nil {
+			break
+		}
+		if nr > 0 {
+			_, err = decryptRead.Write(p.Encode(buf[0:nr]))
 			if err != nil {
 				break
-			}
-			err = normalRead.SetDeadline(time.Now().Add(60 *time.Second))
-			if err != nil {
-				break
-			}
-			nr, err := normalRead.Read(buf)
-			if err != nil {
-				break
-			}
-			if nr > 0 {
-				_, err = decryptRead.Write(p.Encode(buf[0:nr]))
-				if err != nil {
-					break
-				}
 			}
 		}
-		wg.Done()
-	}()
-
-	wg.Wait()
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"net"
 	"bargo/util"
 	"log"
+	"fmt"
 )
 
 // 协议解析器
@@ -25,8 +26,10 @@ func Start(sHost, sPort, clientPort, key string)  {
 	serv, err := net.Listen("tcp", ":" + clientPort)
 	defer serv.Close()
 	if err != nil {
-		log.Println(err)
+		log.Panic(err.Error())
 	}
+	// 启动欢迎信息
+	welcome(sHost, sPort, clientPort, key)
 	for {
 		conn, err := serv.Accept()
 		if err != nil {
@@ -34,4 +37,15 @@ func Start(sHost, sPort, clientPort, key string)  {
 		}
 		go onConnection(conn)
 	}
+}
+
+// 启动欢迎信息
+func welcome(sHost, sPort, clientPort, key string)  {
+	fmt.Println("----------------------------------")
+	fmt.Println("Bargo local server start success!")
+	fmt.Println("server host:", sHost)
+	fmt.Println("server listen port:", sPort)
+	fmt.Println("password:", key)
+	fmt.Println("local listen port:", clientPort)
+	fmt.Println("----------------------------------")
 }
