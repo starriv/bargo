@@ -14,9 +14,9 @@ var serverPort = flag.String("p", "50088", "Server listen port")
 // 密码
 var key = flag.String("k", "bargo", "Transmission password")
 // 本地socks监听端口
-var clientSocksPort = flag.String("lp", "1080", "client listen socks port")
+var clientPort = flag.String("cp", "1080", "client listen socks port")
 // 本地http监听端口
-var clientHttpPort = flag.String("lp", "1081", "client listen http port")
+var clientHttpPort = flag.String("chp", "1081", "client listen http port")
 
 func main() {
 	// 判断运行模式
