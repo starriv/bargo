@@ -21,6 +21,7 @@ var clientPort = flag.String("client-port", "1080", "client listen socks port")
 var clientHttpPort = flag.String("client-http-port", "1081", "client listen http port")
 
 func main() {
+	flag.Parse()
 	// 判断运行模式
 	switch *mode {
 	case "server": // 服务端
