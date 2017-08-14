@@ -29,7 +29,7 @@ func Start(sHost, sPort, clientPort, key string)  {
 		log.Panic(err.Error())
 	}
 	// 启动欢迎信息
-	welcome(sHost, sPort, clientPort, key)
+	welcome(clientPort)
 	for {
 		conn, err := serv.Accept()
 		if err != nil {
@@ -40,12 +40,8 @@ func Start(sHost, sPort, clientPort, key string)  {
 }
 
 // 启动欢迎信息
-func welcome(sHost, sPort, clientPort, key string)  {
-	fmt.Println("----------------------------------")
-	fmt.Println("Bargo local server start success!")
-	fmt.Println("server host:", sHost)
-	fmt.Println("server listen port:", sPort)
-	fmt.Println("password:", key)
-	fmt.Println("local listen port:", clientPort)
-	fmt.Println("----------------------------------")
+func welcome(clientPort string)  {
+	fmt.Println("Bargo Socks5 proxy service start success!")
+	fmt.Println("mode:", "client")
+	fmt.Println("listen port:", clientPort)
 }

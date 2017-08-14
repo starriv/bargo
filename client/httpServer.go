@@ -39,11 +39,7 @@ func HttpStart(clientPort, clientHttpPort string)  {
 
 // 启动欢迎信息
 func httpWelcome(clientHttpPort string)  {
-	fmt.Println("----------------------------------")
-	fmt.Println("Bargo http server start success!")
-	fmt.Println("server host:", "0.0.0.0")
-	fmt.Println("server listen port:", clientHttpPort)
-	fmt.Println("----------------------------------")
+	fmt.Println("http proxy listen port", clientHttpPort)
 }
 
 // 处理每个连接

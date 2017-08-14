@@ -34,9 +34,8 @@ func Start(port string, key string)  {
 
 // 启动欢迎信息
 func welcome(port string, key string)  {
-	fmt.Println("----------------------------------")
-	fmt.Println("Bargo server start success!")
-	fmt.Println("server listen port:", port)
+	fmt.Println("Bargo Socks5 proxy service start success!")
+	fmt.Println("mode:", "server")
+	fmt.Println("listen port:", port)
 	fmt.Println("password:", key)
-	fmt.Println("----------------------------------")
 }
