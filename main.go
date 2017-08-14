@@ -25,12 +25,20 @@ func main() {
 	// 判断运行模式
 	switch *mode {
 	case "server": // 服务端
+		fmt.Println("mode:", "server")
+		fmt.Println("listen port:", *serverPort)
+		fmt.Println("password:", *key)
+
 		server.Start(*serverPort, *key)
 	case "client": // 客户端
 		if len(*serverHost) == 0 {
 			fmt.Println("Please input server host. Example: -server-host 123.123.123.123")
 			return
 		}
+		fmt.Println("mode:", "client")
+		fmt.Println("socks5 proxy listen port:", *clientPort)
+		fmt.Println("http proxy listen port", *clientHttpPort)
+
 		go client.Start(*serverHost, *serverPort, *clientPort, *key)
 		client.HttpStart(*clientPort, *clientHttpPort)
 	default:

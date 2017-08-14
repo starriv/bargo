@@ -25,8 +25,6 @@ func HttpStart(clientPort, clientHttpPort string)  {
 	if err != nil {
 		log.Panic(err.Error())
 	}
-	// 启动欢迎信息
-	httpWelcome(clientHttpPort)
 	for {
 		conn, err := serv.Accept()
 		if err != nil {
@@ -35,11 +33,6 @@ func HttpStart(clientPort, clientHttpPort string)  {
 
 		go onHttpConnection(conn)
 	}
-}
-
-// 启动欢迎信息
-func httpWelcome(clientHttpPort string)  {
-	fmt.Println("http proxy listen port", clientHttpPort)
 }
 
 // 处理每个连接

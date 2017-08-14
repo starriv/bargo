@@ -4,7 +4,6 @@ import (
 	"net"
 	"bargo/util"
 	"log"
-	"fmt"
 )
 
 // 协议解析器
@@ -21,8 +20,6 @@ func Start(port string, key string)  {
 	if err != nil {
 		log.Println(err)
 	}
-	// 启动欢迎信息
-	welcome(port, key)
 	for {
 		conn, err := serv.Accept()
 		if err != nil {
@@ -30,12 +27,4 @@ func Start(port string, key string)  {
 		}
 		go onConnection(conn)
 	}
-}
-
-// 启动欢迎信息
-func welcome(port string, key string)  {
-	fmt.Println("Bargo Socks5 proxy service start success!")
-	fmt.Println("mode:", "server")
-	fmt.Println("listen port:", port)
-	fmt.Println("password:", key)
 }
