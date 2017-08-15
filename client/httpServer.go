@@ -5,13 +5,13 @@ import (
 	"log"
 	"fmt"
 	"net/url"
-	"bytes"
 	"strings"
 	"regexp"
 	"encoding/binary"
 	"strconv"
 	"time"
 	"io"
+	"bufio"
 )
 // 监听端口
 var httpPort string
@@ -44,18 +44,14 @@ func onHttpConnection(conn net.Conn) {
 	}()
 	defer conn.Close()
 	// 读取客户端数据
-	buf := make([]byte, 1024)
-	n, err := conn.Read(buf)
+	connReader := bufio.NewReader(conn)
+	httpFirstLine, err := connReader.ReadBytes('\n')
 	if err != nil {
 		return
 	}
 	// 解析http请求头
 	var method, host string
-	indexN := bytes.IndexByte(buf,'\n')
-	if indexN == -1 {
-		return
-	}
-	fmt.Sscanf(string(buf[:indexN]), "%s%s", &method, &host)
+	fmt.Sscanf(string(httpFirstLine), "%s%s", &method, &host)
 
 	//获得了请求的host和port，就开始拨号吧
 	socksServer, err := net.DialTimeout("tcp", "127.0.0.1:"+socksPort, 10 * time.Second)
@@ -81,7 +77,7 @@ func onHttpConnection(conn net.Conn) {
 		return
 	}
 	// 服务端响应ok 转发信息
-	info2 := make([]byte, 512)
+	info2 := make([]byte, 10)
 	_, err = socksServer.Read(info2)
 	if err != nil || info2[1] != 0x00 {
 		return
@@ -93,7 +89,12 @@ func onHttpConnection(conn net.Conn) {
 			return
 		}
 	} else {
-		_, err = socksServer.Write(buf[:n])
+		bufferedData := make([]byte, connReader.Buffered())
+		_, err := connReader.Read(bufferedData)
+		if err != nil {
+			return
+		}
+		_, err = socksServer.Write(append(httpFirstLine, bufferedData...))
 		if err != nil {
 			return
 		}
