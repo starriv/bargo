@@ -51,7 +51,11 @@ func onHttpConnection(conn net.Conn) {
 	}
 	// 解析http请求头
 	var method, host string
-	fmt.Sscanf(string(buf[:bytes.IndexByte(buf, '\n')]), "%s%s", &method, &host)
+	indexN := bytes.IndexByte(buf,'\n')
+	if indexN == -1 {
+		return
+	}
+	fmt.Sscanf(string(buf[:indexN]), "%s%s", &method, &host)
 
 	//获得了请求的host和port，就开始拨号吧
 	socksServer, err := net.DialTimeout("tcp", "127.0.0.1:"+socksPort, 10 * time.Second)
