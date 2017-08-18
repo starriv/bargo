@@ -5,20 +5,30 @@ import (
 	"fmt"
 	"bargo/server"
 	"bargo/client"
+	"os"
 )
 
 // 运行模式
-var mode = flag.String("mode", "server", "run mode: server or client")
+var mode = flag.String("mode", getEnvArgs("bargo_mode", "server"), "run mode: server or client")
 // 服务端地址
-var serverHost = flag.String("server-host", "", "Server Host")
+var serverHost = flag.String("server-host", getEnvArgs("bargo_server_host", ""), "Server Host")
 // 服务端监听端口
-var serverPort = flag.String("server-port", "50088", "Server listen port")
+var serverPort = flag.String("server-port", getEnvArgs("bargo_server_port", "50088"), "Server listen port")
 // 密码
-var key = flag.String("key", "bargo", "Transmission password")
+var key = flag.String("key", getEnvArgs("bargo_key", "bargo"), "Transmission password")
 // 本地socks监听端口
-var clientPort = flag.String("client-port", "1080", "client listen socks port")
+var clientPort = flag.String("client-port", getEnvArgs("bargo_client_port", "1080"), "client listen socks port")
 // 本地http监听端口
-var clientHttpPort = flag.String("client-http-port", "1081", "client listen http port")
+var clientHttpPort = flag.String("client-http-port", getEnvArgs("bargo_client_http_port", "1081"), "client listen http port")
+
+// 优先获取环境变量作为默认值
+func getEnvArgs(key string, def string) string {
+	v := os.Getenv(key)
+	if len(v) != 0 {
+		return v
+	}
+	return def
+}
 
 func main() {
 	flag.Parse()
