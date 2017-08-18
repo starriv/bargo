@@ -2,8 +2,9 @@ package client
 
 import (
 	"net"
-	"bargo/util"
 	"log"
+
+	"github.com/dawniii/bargo/util"
 )
 
 // 协议解析器

@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"time"
 	"log"
-	"bargo/util"
+
+	"github.com/dawniii/bargo/util"
 )
 
 // 处理每个链接

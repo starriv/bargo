@@ -3,9 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
-	"bargo/server"
-	"bargo/client"
 	"os"
+
+	"github.com/dawniii/bargo/server"
+	"github.com/dawniii/bargo/client"
 )
 
 // 运行模式
