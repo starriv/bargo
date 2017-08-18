@@ -1,0 +1,25 @@
+version: '3'
+services:
+  bargo_server:
+    build: ./
+    image: bargo:latest
+    container_name: bargo_server
+    ports:
+      - "50080:50080"
+    environment:
+      - bargo_mode=server
+      - bargo_server_port=50080
+      - bargo_key=1q2w3e4r
+  bargo_client:
+    image: bargo:latest
+    container_name: bargo_client
+    ports:
+      - "1080:1080"
+      - "1081:1081"
+    environment:
+      - bargo_mode=client
+      - bargo_server_host=127.0.0.1
+      - bargo_server_port=50080
+      - bargo_key=1q2w3e4r
+      - bargo_client_port=1080
+      - bargo_client_http_port=1081
