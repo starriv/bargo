@@ -3,6 +3,11 @@ services:
   bargo_server:
     build: ./
     image: bargo:latest
+    deploy:
+      cpus: "0.1"
+      memory: 50M
+      restart_policy:
+        condition: on-failure
     container_name: bargo_server
     ports:
       - "50080:50080"
