@@ -7,6 +7,7 @@ import (
 
 	"github.com/dawniii/bargo/server"
 	"github.com/dawniii/bargo/client"
+	"github.com/dawniii/bargo/client/httpproxy"
 )
 
 // 运行模式
@@ -22,7 +23,9 @@ var clientPort = flag.String("client-port", getEnvArgs("bargo_client_port", "108
 // 本地http监听端口
 var clientHttpPort = flag.String("client-http-port", getEnvArgs("bargo_client_http_port", "1081"), "client listen http port")
 // 本地开启全局代理
-var clientSysproxy = flag.String("client-sysproxy", getEnvArgs("bargo_client_sysproxy", "off"), "client open system proxy")
+var clientSysproxy = flag.String("client-sysproxy", getEnvArgs("bargo_client_sysproxy", "off"), "client open global system proxy")
+// 添加需要代理的域名
+var clientPac = flag.String("client-pac", getEnvArgs("bargo_client_pac", ""), "client pac domain or ip, use | split")
 
 // 优先获取环境变量作为默认值
 func getEnvArgs(key string, def string) string {
@@ -52,11 +55,9 @@ func main() {
 		fmt.Println("socks5 proxy listen port:", *clientPort)
 		fmt.Println("http proxy listen port", *clientHttpPort)
 
-		if *clientSysproxy == "on" {
-			go client.OpenSysproxy(*clientHttpPort)
-		}
+		go client.OpenSysproxy(*clientHttpPort)
 		go client.Start(*serverHost, *serverPort, *clientPort, *key)
-		client.HttpStart(*clientPort, *clientHttpPort)
+		httpproxy.Start(*clientPort, *clientHttpPort, *clientSysproxy, *clientPac)
 	default:
 		fmt.Println("Please input correct mode. server or client")
 		return

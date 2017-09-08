@@ -1,16 +1,13 @@
 package client
 
 import (
-	"path/filepath"
 	"github.com/getlantern/sysproxy"
 	"log"
 )
 
 // 开启系统代理
 func OpenSysproxy(port string)  {
-	helperFullPath := "bargo-sysproxy"
-	iconFullPath, _ := filepath.Abs("./icon.png")
-	err := sysproxy.EnsureHelperToolPresent(helperFullPath, "Input your password and see the world!", iconFullPath)
+	err := sysproxy.EnsureHelperToolPresent("bargo-sysproxy", "Input your password and see the world!", "")
 	if err != nil {
 		log.Printf("Error EnsureHelperToolPresent: %s\n", err)
 		return

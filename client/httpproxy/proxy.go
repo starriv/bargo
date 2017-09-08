@@ -1,58 +1,80 @@
-package client
+package httpproxy
 
 import (
-	"net"
-	"log"
-	"fmt"
-	"net/url"
 	"strings"
 	"regexp"
-	"encoding/binary"
 	"strconv"
-	"time"
-	"io"
+	"net"
 	"bufio"
+	"net/url"
+	"time"
+	"fmt"
+	"io"
+	"encoding/binary"
 )
-// 监听端口
-var httpPort string
-var socksPort string
 
-// 开启http代理 转发数据到socks代理
-func HttpStart(clientPort, clientHttpPort string)  {
-	httpPort = clientHttpPort
-	socksPort = clientPort
-	serv, err := net.Listen("tcp", ":"+httpPort)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	for {
-		conn, err := serv.Accept()
+// 获得地址和端口
+func parseAddrPort(host, method string) (string, string, error) {
+	var addr, port string // 地址 端口
+	// 获得目标服务器地址和端口
+	if method == "CONNECT" { // https
+		temp := strings.Split(host,":")
+		addr = temp[0]
+		port = temp[1]
+	} else { // http
+		hostPortURL, err := url.Parse(host)
 		if err != nil {
-			log.Panic(err)
+			return "", "", err
 		}
-
-		go onHttpConnection(conn)
+		if strings.Index(hostPortURL.Host, ":") == -1 { //host不带端口， 默认80
+			addr = hostPortURL.Host
+			port = "80"
+		} else {
+			temp := strings.Split(hostPortURL.Host,":")
+			addr = temp[0]
+			port = temp[1]
+		}
 	}
+
+	return addr, port, nil
 }
 
-// 处理每个连接
-func onHttpConnection(conn net.Conn) {
-	defer func() {
-		if err := recover(); err != nil {
-			log.Println(err)
-		}
-	}()
-	defer conn.Close()
-	// 读取客户端数据
-	connReader := bufio.NewReader(conn)
-	httpFirstLine, err := connReader.ReadBytes('\n')
+// 正常代理
+func defaultProxy(httpFirstLine []byte, host string, method string, conn net.Conn, connReader *bufio.Reader) {
+	addr, port, err := parseAddrPort(host, method)
 	if err != nil {
 		return
 	}
-	// 解析http请求头
-	var method, host string
-	fmt.Sscanf(string(httpFirstLine), "%s%s", &method, &host)
+	address := addr + ":" + port
+	socksServer, err := net.DialTimeout("tcp", address, 10 * time.Second)
+	if err != nil {
+		return
+	}
+	defer socksServer.Close()
+	// 开始转发信息 响应
+	if method == "CONNECT" {
+		_, err := fmt.Fprint(conn, "HTTP/1.1 200 Connection Established\r\n\r\n")
+		if err != nil {
+			return
+		}
+	} else {
+		bufferedData := make([]byte, connReader.Buffered())
+		_, err := connReader.Read(bufferedData)
+		if err != nil {
+			return
+		}
+		_, err = socksServer.Write(append(httpFirstLine, bufferedData...))
+		if err != nil {
+			return
+		}
+	}
+	//进行转发
+	go io.Copy(socksServer, conn)
+	io.Copy(conn, socksServer)
+}
 
+// 科学代理
+func hideProxy(httpFirstLine []byte, host string, method string, conn net.Conn, connReader *bufio.Reader) {
 	//获得了请求的host和port，就开始拨号吧
 	socksServer, err := net.DialTimeout("tcp", "127.0.0.1:"+socksPort, 10 * time.Second)
 	if err != nil {
@@ -72,7 +94,7 @@ func onHttpConnection(conn net.Conn) {
 		return
 	}
 	// 客户端发送连接信息
-	_, err = socksServer.Write(newSocks5Head(host))
+	_, err = socksServer.Write(newSocks5Head(host, method))
 	if err != nil {
 		return
 	}
@@ -104,31 +126,15 @@ func onHttpConnection(conn net.Conn) {
 	io.Copy(conn, socksServer)
 }
 
-func newSocks5Head(host string) []byte {
+// 组合socks5通讯头
+func newSocks5Head(host, method string) []byte {
 	socks5Header := []byte{0x05, 0x01, 0x00}
-	// 解析host
-	hostPortURL, err := url.Parse(host)
+	addr, port, err := parseAddrPort(host, method)
 	if err != nil {
 		return nil
 	}
-	var addr string // 地址
-	var port string // 端口
-	// 获得目标服务器地址和端口
-	if hostPortURL.Opaque == "443" { //https访问
-		addr = hostPortURL.Scheme
-		port = "443"
-	} else { //http访问
-		if strings.Index(hostPortURL.Host, ":") == -1 { //host不带端口， 默认80
-			addr = hostPortURL.Host
-			port = "80"
-		} else {
-			temp := strings.Split(hostPortURL.Host,":")
-			addr = temp[0]
-			port = temp[1]
-		}
-	}
 	// 判断addr是ip地址还是字符串域名
-	reg := regexp.MustCompile(`^\d\.\d\.\d\.\d$`)
+	reg := regexp.MustCompile(`^(?:\d{1,3}\.){3}\d{1,3}$`)
 	if reg.MatchString(addr) { // 是ip地址
 		socks5Header = append(socks5Header, byte(0x01))
 		// 组合ip地址到协议头
