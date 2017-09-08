@@ -77,16 +77,17 @@ func updatePacFile(pacFile string) error  {
 	var gfwBase64String string
 	// 远程获取新数据
 	resp, err := http.Get(GFWLIST_URL)
-	if err != nil {
+	if err != nil || resp.StatusCode != 200 {
 		// 获取失败则读取默认的
 		gfwBase64String = DEFAULT_GFWLIST
 	} else {
 		gfwBase64, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return err
-		}
 		defer resp.Body.Close()
-		gfwBase64String = string(gfwBase64)
+		if err != nil {
+			gfwBase64String = DEFAULT_GFWLIST
+		} else {
+			gfwBase64String = string(gfwBase64)
+		}
 	}
 
 	// 打开缓存文件
