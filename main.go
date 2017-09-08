@@ -41,9 +41,12 @@ func main() {
 	// 判断运行模式
 	switch *mode {
 	case "server": // 服务端
-		fmt.Println("mode:", "server")
-		fmt.Println("listen port:", *serverPort)
-		fmt.Println("password:", *key)
+		fmt.Println("\033[31m----------------------\033[0m")
+		fmt.Printf("Bargo Server Start\n")
+		fmt.Printf("%7s: %s\n", "mode", "server")
+		fmt.Printf("%7s: %s\n", "port", *serverPort)
+		fmt.Printf("%7s: %s\n", "key", *key)
+		fmt.Println("\033[31m----------------------\033[0m")
 
 		server.Start(*serverPort, *key)
 	case "client": // 客户端
@@ -51,9 +54,12 @@ func main() {
 			fmt.Println("Please input server host. Example: -server-host 123.123.123.123")
 			return
 		}
-		fmt.Println("mode:", "client")
-		fmt.Println("socks5 proxy listen port:", *clientPort)
-		fmt.Println("http proxy listen port", *clientHttpPort)
+		fmt.Println("\033[31m----------------------\033[0m")
+		fmt.Printf("Bargo Client Start\n")
+		fmt.Printf("%12s: %s\n", "mode", "client")
+		fmt.Printf("%12s: %s\n", "socks5 port", *clientPort)
+		fmt.Printf("%12s: %s\n", "http port", *clientHttpPort)
+		fmt.Println("\033[31m----------------------\033[0m")
 
 		go client.OpenSysproxy(*clientHttpPort)
 		go client.Start(*serverHost, *serverPort, *clientPort, *key)
