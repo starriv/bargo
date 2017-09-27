@@ -43,7 +43,7 @@ func (p *Protocol) Decode(read io.Reader) ([]byte, error) {
 	// 获得包长
 	size := binary.BigEndian.Uint32(head)
 	// 包异常判断
-	if size > 1040 {
+	if size > 1024 {
 		return nil, err
 	}
 	data := make([]byte, size)
