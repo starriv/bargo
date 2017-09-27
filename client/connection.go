@@ -1,23 +1,28 @@
 package client
 
 import (
-	"net"
 	"fmt"
-	"time"
-	"log"
 	"io"
+	"log"
+	"net"
+	"time"
 )
 
 // 处理每个链接
-func onConnection(conn net.Conn)  {
+func onConnection(conn net.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println(err)
 		}
 	}()
 	defer conn.Close()
+	// 设置连接过期
+	err := conn.SetDeadline(time.Now().Add(10 * time.Second))
+	if err != nil {
+		return
+	}
 	// socks5版本验证
-	err := checkVersion(conn)
+	err = checkVersion(conn)
 	if err != nil {
 		return
 	}
@@ -27,6 +32,11 @@ func onConnection(conn net.Conn)  {
 		return
 	}
 	defer remoteConn.Close()
+	// 设置远程连接过期
+	err = remoteConn.SetDeadline(time.Now().Add(10 * time.Second))
+	if err != nil {
+		return
+	}
 	// 代理
 	protocol.Pipe(remoteConn, conn)
 }
@@ -39,7 +49,7 @@ func NewRemoteConn(conn net.Conn) (net.Conn, error) {
 		return nil, err
 	}
 	// 建立远程连接
-	remoteConn, err := net.DialTimeout("tcp", fmt.Sprintf("%v:%v", serverHost, serverPort), 10 * time.Second)
+	remoteConn, err := net.DialTimeout("tcp", fmt.Sprintf("%v:%v", serverHost, serverPort), 10*time.Second)
 	if err != nil {
 		conn.Write([]byte{0x05, 0x07, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
 		return nil, err
@@ -66,7 +76,6 @@ func NewRemoteConn(conn net.Conn) (net.Conn, error) {
 		return nil, fmt.Errorf("remote hander don't right")
 	}
 }
-
 
 // checkVersion 判断协议版本和验证方式(不做验证)
 func checkVersion(conn net.Conn) error {
