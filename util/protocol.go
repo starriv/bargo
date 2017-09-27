@@ -43,7 +43,7 @@ func (p *Protocol) Decode(read io.Reader) ([]byte, error) {
 	// 获得包长
 	size := binary.BigEndian.Uint32(head)
 	// 包异常判断
-	if size > 1024 {
+	if size > 4096 {
 		return nil, err
 	}
 	data := make([]byte, size)
@@ -80,7 +80,7 @@ func (p *Protocol) Pipe(decryptRead, normalRead net.Conn) {
 		}
 	}()
 
-	buf := make([]byte, 1024)
+	buf := make([]byte, 4096)
 	for {
 		err := decryptRead.SetDeadline(time.Now().Add(30 * time.Second))
 		if err != nil {
