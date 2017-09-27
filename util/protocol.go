@@ -8,8 +8,8 @@ import (
 )
 
 // Protocol 传输协议（4字节定长包头）
-type Protocol struct{
-	encryptor  *Encryptor
+type Protocol struct {
+	encryptor *Encryptor
 }
 
 // 创建协议解析器
@@ -42,6 +42,10 @@ func (p *Protocol) Decode(read io.Reader) ([]byte, error) {
 	}
 	// 获得包长
 	size := binary.BigEndian.Uint32(head)
+	// 包异常判断
+	if size > 2048 {
+		return nil, err
+	}
 	data := make([]byte, size)
 	_, err = io.ReadFull(read, data)
 	if err != nil {
@@ -57,11 +61,11 @@ func (p *Protocol) Decode(read io.Reader) ([]byte, error) {
 func (p *Protocol) Pipe(decryptRead, normalRead net.Conn) {
 	go func() {
 		for {
-			err := decryptRead.SetDeadline(time.Now().Add(60 *time.Second))
+			err := decryptRead.SetDeadline(time.Now().Add(30 * time.Second))
 			if err != nil {
 				break
 			}
-			err = normalRead.SetDeadline(time.Now().Add(60 *time.Second))
+			err = normalRead.SetDeadline(time.Now().Add(30 * time.Second))
 			if err != nil {
 				break
 			}
@@ -76,13 +80,13 @@ func (p *Protocol) Pipe(decryptRead, normalRead net.Conn) {
 		}
 	}()
 
-	buf := make([]byte, 4096)
+	buf := make([]byte, 1024)
 	for {
-		err := decryptRead.SetDeadline(time.Now().Add(60 *time.Second))
+		err := decryptRead.SetDeadline(time.Now().Add(30 * time.Second))
 		if err != nil {
 			break
 		}
-		err = normalRead.SetDeadline(time.Now().Add(60 *time.Second))
+		err = normalRead.SetDeadline(time.Now().Add(30 * time.Second))
 		if err != nil {
 			break
 		}
