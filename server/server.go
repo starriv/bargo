@@ -1,22 +1,28 @@
 package server
 
 import (
-	"net"
-	"log"
-
 	"github.com/dawniii/bargo/util"
+	"log"
+	"net"
+	"strconv"
 )
 
 // 协议解析器
 var protocol *util.Protocol
 
 // 开始服务
-func Start(port string, key string)  {
+func Start(port, key, connLimitNum string) {
+	// conn limit
+	climit, err := strconv.Atoi(connLimitNum)
+	if err != nil {
+		log.Fatalln("conn limit err:", err)
+	}
+	connCount := new(util.ConnectionCount)
 	// 协议解析器
 	encryptor := util.NewEncryptor([]byte(key))
 	protocol = util.NewProtocol(encryptor)
 	// tcp服务
-	serv, err := net.Listen("tcp", ":" + port)
+	serv, err := net.Listen("tcp", ":"+port)
 	defer serv.Close()
 	if err != nil {
 		log.Println(err)
@@ -26,6 +32,9 @@ func Start(port string, key string)  {
 		if err != nil {
 			log.Panic(err.Error())
 		}
-		go onConnection(conn)
+		// 连接数量计数
+		if connCount.Get() < climit {
+			go onConnection(conn, connCount)
+		}
 	}
 }

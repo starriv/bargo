@@ -7,6 +7,9 @@ import (
 	"time"
 )
 
+// 心跳间隔时间
+const HeartbeatInterval = 30
+
 // Protocol 传输协议（4字节定长包头）
 type Protocol struct {
 	encryptor *Encryptor
@@ -61,11 +64,11 @@ func (p *Protocol) Decode(read io.Reader) ([]byte, error) {
 func (p *Protocol) Pipe(decryptRead, normalRead net.Conn) {
 	go func() {
 		for {
-			err := decryptRead.SetDeadline(time.Now().Add(30 * time.Second))
+			err := decryptRead.SetDeadline(time.Now().Add(HeartbeatInterval * time.Second))
 			if err != nil {
 				break
 			}
-			err = normalRead.SetDeadline(time.Now().Add(30 * time.Second))
+			err = normalRead.SetDeadline(time.Now().Add(HeartbeatInterval * time.Second))
 			if err != nil {
 				break
 			}
@@ -82,11 +85,11 @@ func (p *Protocol) Pipe(decryptRead, normalRead net.Conn) {
 
 	buf := make([]byte, 4096)
 	for {
-		err := decryptRead.SetDeadline(time.Now().Add(30 * time.Second))
+		err := decryptRead.SetDeadline(time.Now().Add(HeartbeatInterval * time.Second))
 		if err != nil {
 			break
 		}
-		err = normalRead.SetDeadline(time.Now().Add(30 * time.Second))
+		err = normalRead.SetDeadline(time.Now().Add(HeartbeatInterval * time.Second))
 		if err != nil {
 			break
 		}

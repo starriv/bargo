@@ -9,16 +9,24 @@ import (
 	"github.com/dawniii/bargo/util"
 )
 
+// 连接超时关闭时间
+const KeepCloseTime = 10
+
 // 处理每个链接
-func onConnection(conn net.Conn) {
+func onConnection(conn net.Conn, connCount *util.ConnectionCount) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println(err)
 		}
 	}()
-	defer conn.Close()
+	defer func() {
+		conn.Close()
+		connCount.Add(-1)
+	}()
+	// 连接数量加1
+	connCount.Add(1)
 	// 设置连接过期
-	err := conn.SetDeadline(time.Now().Add(10 * time.Second))
+	err := conn.SetDeadline(time.Now().Add(KeepCloseTime * time.Second))
 	if err != nil {
 		return
 	}
@@ -29,7 +37,7 @@ func onConnection(conn net.Conn) {
 	}
 	defer remoteConn.Close()
 	// 设置远程连接过期
-	err = remoteConn.SetDeadline(time.Now().Add(10 * time.Second))
+	err = remoteConn.SetDeadline(time.Now().Add(KeepCloseTime * time.Second))
 	if err != nil {
 		return
 	}
@@ -50,7 +58,7 @@ func NewRemoteConn(conn net.Conn) (net.Conn, error) {
 		return nil, err
 	}
 	// 建立远程连接
-	remoteConn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", socks5Head.Addr, socks5Head.Port), 10*time.Second)
+	remoteConn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", socks5Head.Addr, socks5Head.Port), KeepCloseTime*time.Second)
 	if err != nil {
 		return nil, err
 	}
