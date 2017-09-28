@@ -1,23 +1,26 @@
 package httpproxy
 
 import (
-	"net"
-	"log"
-	"fmt"
 	"bufio"
+	"fmt"
+	"log"
+	"net"
 
 	"github.com/dawniii/bargo/util/pac"
 )
+
 // 监听端口
 var httpPort string
 var socksPort string
+
 // 全局模式或者局部模式
 var globalProxy string
+
 // 用户定义的pac域名ip
 var userPac string
 
 // 开启http代理 转发数据到socks代理
-func Start(clientPort, clientHttpPort, clientSysproxy, clientPac string)  {
+func Start(clientPort, clientHttpPort, clientSysproxy, clientPac string) {
 	httpPort = clientHttpPort
 	socksPort = clientPort
 	globalProxy = clientSysproxy
@@ -52,6 +55,7 @@ func onHttpConnection(conn net.Conn) {
 	}
 	// 解析http请求头
 	var method, host string
+	log.Println("解析http第一行", string(httpFirstLine))
 	fmt.Sscanf(string(httpFirstLine), "%s%s", &method, &host)
 	if globalProxy == "on" {
 		// 全局科学代理
@@ -70,4 +74,6 @@ func onHttpConnection(conn net.Conn) {
 		// 正常代理
 		defaultProxy(httpFirstLine, host, method, conn, connReader)
 	}
+	// 正常代理
+	defaultProxy(httpFirstLine, host, method, conn, connReader)
 }

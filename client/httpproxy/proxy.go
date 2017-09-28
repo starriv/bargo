@@ -1,16 +1,17 @@
 package httpproxy
 
 import (
-	"strings"
-	"regexp"
-	"strconv"
-	"net"
 	"bufio"
-	"net/url"
-	"time"
+	"encoding/binary"
 	"fmt"
 	"io"
-	"encoding/binary"
+	"log"
+	"net"
+	"net/url"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 )
 
 // 获得地址和端口
@@ -18,7 +19,7 @@ func parseAddrPort(host, method string) (string, string, error) {
 	var addr, port string // 地址 端口
 	// 获得目标服务器地址和端口
 	if method == "CONNECT" { // https
-		temp := strings.Split(host,":")
+		temp := strings.Split(host, ":")
 		addr = temp[0]
 		port = temp[1]
 	} else { // http
@@ -30,7 +31,7 @@ func parseAddrPort(host, method string) (string, string, error) {
 			addr = hostPortURL.Host
 			port = "80"
 		} else {
-			temp := strings.Split(hostPortURL.Host,":")
+			temp := strings.Split(hostPortURL.Host, ":")
 			addr = temp[0]
 			port = temp[1]
 		}
@@ -46,7 +47,7 @@ func defaultProxy(httpFirstLine []byte, host string, method string, conn net.Con
 		return
 	}
 	address := addr + ":" + port
-	socksServer, err := net.DialTimeout("tcp", address, 10 * time.Second)
+	socksServer, err := net.DialTimeout("tcp", address, 10*time.Second)
 	if err != nil {
 		return
 	}
@@ -63,6 +64,10 @@ func defaultProxy(httpFirstLine []byte, host string, method string, conn net.Con
 		if err != nil {
 			return
 		}
+		// httpFirstLine 替换头部为非代理形式 GET / HTTP/1.1
+		reg := regexp.MustCompile(`http://.*?/`)
+		httpFirstLine = reg.ReplaceAll(httpFirstLine, []byte("/"))
+
 		_, err = socksServer.Write(append(httpFirstLine, bufferedData...))
 		if err != nil {
 			return
@@ -76,7 +81,7 @@ func defaultProxy(httpFirstLine []byte, host string, method string, conn net.Con
 // 科学代理
 func hideProxy(httpFirstLine []byte, host string, method string, conn net.Conn, connReader *bufio.Reader) {
 	//获得了请求的host和port，就开始拨号吧
-	socksServer, err := net.DialTimeout("tcp", "127.0.0.1:"+socksPort, 10 * time.Second)
+	socksServer, err := net.DialTimeout("tcp", "127.0.0.1:"+socksPort, 10*time.Second)
 	if err != nil {
 		return
 	}
@@ -116,6 +121,10 @@ func hideProxy(httpFirstLine []byte, host string, method string, conn net.Conn, 
 		if err != nil {
 			return
 		}
+		// httpFirstLine 替换头部为非代理形式 GET / HTTP/1.1
+		reg := regexp.MustCompile(`http://.*?/`)
+		httpFirstLine = reg.ReplaceAll(httpFirstLine, []byte("/"))
+
 		_, err = socksServer.Write(append(httpFirstLine, bufferedData...))
 		if err != nil {
 			return
@@ -130,6 +139,7 @@ func hideProxy(httpFirstLine []byte, host string, method string, conn net.Conn, 
 func newSocks5Head(host, method string) []byte {
 	socks5Header := []byte{0x05, 0x01, 0x00}
 	addr, port, err := parseAddrPort(host, method)
+	log.Println("socks5Header", addr, port)
 	if err != nil {
 		return nil
 	}
@@ -139,7 +149,7 @@ func newSocks5Head(host, method string) []byte {
 		socks5Header = append(socks5Header, byte(0x01))
 		// 组合ip地址到协议头
 		dstAddr := make([]byte, 4)
-		temp := strings.Split(addr,".")
+		temp := strings.Split(addr, ".")
 		dstAddr0, _ := strconv.Atoi(temp[0])
 		dstAddr1, _ := strconv.Atoi(temp[1])
 		dstAddr2, _ := strconv.Atoi(temp[2])
