@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/url"
 	"regexp"
@@ -139,7 +138,6 @@ func hideProxy(httpFirstLine []byte, host string, method string, conn net.Conn, 
 func newSocks5Head(host, method string) []byte {
 	socks5Header := []byte{0x05, 0x01, 0x00}
 	addr, port, err := parseAddrPort(host, method)
-	log.Println("socks5Header", addr, port)
 	if err != nil {
 		return nil
 	}

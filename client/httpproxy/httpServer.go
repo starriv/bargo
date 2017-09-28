@@ -43,7 +43,7 @@ func Start(clientPort, clientHttpPort, clientSysproxy, clientPac string) {
 func onHttpConnection(conn net.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println(err)
+			return
 		}
 	}()
 	defer conn.Close()
@@ -55,7 +55,6 @@ func onHttpConnection(conn net.Conn) {
 	}
 	// 解析http请求头
 	var method, host string
-	log.Println("解析http第一行", string(httpFirstLine))
 	fmt.Sscanf(string(httpFirstLine), "%s%s", &method, &host)
 	if globalProxy == "on" {
 		// 全局科学代理
