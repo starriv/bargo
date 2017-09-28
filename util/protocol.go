@@ -83,7 +83,7 @@ func (p *Protocol) Pipe(decryptRead, normalRead net.Conn) {
 		}
 	}()
 
-	buf := make([]byte, 4096)
+	buf := make([]byte, 1024)
 	for {
 		err := decryptRead.SetDeadline(time.Now().Add(HeartbeatInterval * time.Second))
 		if err != nil {
