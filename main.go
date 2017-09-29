@@ -35,7 +35,7 @@ var clientSysproxy = flag.String("client-sysproxy", getEnvArgs("bargo_client_sys
 var clientPac = flag.String("client-pac", getEnvArgs("bargo_client_pac", ""), "client pac domain or ip, use | split")
 
 // 并发处理连接数量
-var connectLimt = flag.String("connect-limit", getEnvArgs("bargo_connect_limit", "100"), "connection limit number")
+var connectLimt = flag.String("connect-limit", getEnvArgs("bargo_connect_limit", "0"), "max keep alive connection number, 0 not limit")
 
 // 优先获取环境变量作为默认值
 func getEnvArgs(key string, def string) string {

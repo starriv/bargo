@@ -32,9 +32,11 @@ func Start(port, key, connLimitNum string) {
 		if err != nil {
 			log.Panic(err.Error())
 		}
-		// 连接数量计数
-		if connCount.Get() < climit {
-			go onConnection(conn, connCount)
+		// 连接数量控制
+		if climit != 0 && connCount.Get() >= climit {
+			conn.Close()
+			continue
 		}
+		go onConnection(conn, connCount)
 	}
 }

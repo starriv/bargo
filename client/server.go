@@ -43,9 +43,11 @@ func Start(sHost, sPort, clientPort, key, connLimitNum string) {
 		if err != nil {
 			log.Println(err)
 		}
-		// 连接数量计数
-		if connCount.Get() < climit {
-			go onConnection(conn, connCount)
+		// 连接数量判断
+		if climit != 0 && connCount.Get() >= climit {
+			conn.Close()
+			continue
 		}
+		go onConnection(conn, connCount)
 	}
 }
