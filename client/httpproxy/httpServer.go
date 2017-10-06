@@ -57,8 +57,8 @@ func onHttpConnection(conn net.Conn) {
 	}
 
 	if globalProxy == "on" {
-		proxy(conn, "auto")
-	} else {
 		proxy(conn, "all")
+	} else {
+		proxy(conn, "auto")
 	}
 }
