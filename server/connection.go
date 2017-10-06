@@ -10,7 +10,7 @@ import (
 )
 
 // 连接超时关闭时间
-const KeepCloseTime = 10
+const KeepCloseTime = 30
 
 // 处理每个链接
 func onConnection(conn net.Conn, connCount *util.ConnectionCount) {

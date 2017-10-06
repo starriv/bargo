@@ -2,7 +2,6 @@ package client
 
 import (
 	"fmt"
-	"github.com/dawniii/bargo/util"
 	"io"
 	"log"
 	"net"
@@ -10,21 +9,16 @@ import (
 )
 
 // 连接超时关闭时间
-const KeepCloseTime = 10
+const KeepCloseTime = 30
 
 // 处理每个链接
-func onConnection(conn net.Conn, connCount *util.ConnectionCount) {
+func onConnection(conn net.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Println(err)
 		}
 	}()
-	defer func() {
-		conn.Close()
-		connCount.Add(-1)
-	}()
-	// 连接计数
-	connCount.Add(1)
+	defer conn.Close()
 	// 设置连接过期
 	err := conn.SetDeadline(time.Now().Add(KeepCloseTime * time.Second))
 	if err != nil {

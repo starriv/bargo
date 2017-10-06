@@ -5,7 +5,6 @@ import (
 	"net"
 
 	"github.com/dawniii/bargo/util"
-	"strconv"
 )
 
 // 协议解析器
@@ -18,16 +17,10 @@ var serverHost string
 var serverPort string
 
 // 开始服务
-func Start(sHost, sPort, clientPort, key, connLimitNum string) {
+func Start(sHost, sPort, clientPort, key string) {
 	// 初始化参数
 	serverHost = sHost
 	serverPort = sPort
-	// conn limit
-	climit, err := strconv.Atoi(connLimitNum)
-	if err != nil {
-		log.Fatalln("conn limit err:", err)
-	}
-	connCount := new(util.ConnectionCount)
 
 	// 协议解析器
 	encryptor := util.NewEncryptor([]byte(key))
@@ -43,11 +36,7 @@ func Start(sHost, sPort, clientPort, key, connLimitNum string) {
 		if err != nil {
 			log.Println(err)
 		}
-		// 连接数量判断
-		if climit != 0 && connCount.Get() >= climit {
-			conn.Close()
-			continue
-		}
-		go onConnection(conn, connCount)
+
+		go onConnection(conn)
 	}
 }

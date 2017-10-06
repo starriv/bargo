@@ -72,7 +72,7 @@ func main() {
 		fmt.Println("\033[31m----------------------\033[0m")
 
 		go client.OpenSysproxy(*clientHttpPort)
-		go client.Start(*serverHost, *serverPort, *clientPort, *key, *connectLimt)
+		go client.Start(*serverHost, *serverPort, *clientPort, *key)
 		httpproxy.Start(*clientPort, *clientHttpPort, *clientSysproxy, *clientPac)
 	default:
 		fmt.Println("Please input correct mode. server or client")

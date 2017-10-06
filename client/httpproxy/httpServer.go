@@ -1,8 +1,6 @@
 package httpproxy
 
 import (
-	"bufio"
-	"fmt"
 	"log"
 	"net"
 
@@ -29,6 +27,11 @@ func Start(clientPort, clientHttpPort, clientSysproxy, clientPac string) {
 	if err != nil {
 		log.Panic(err.Error())
 	}
+	defer serv.Close()
+	// 添加用户自定义规则
+	if len(userPac) > 0 {
+		pac.AddRules(userPac)
+	}
 	for {
 		conn, err := serv.Accept()
 		if err != nil {
@@ -47,32 +50,15 @@ func onHttpConnection(conn net.Conn) {
 		}
 	}()
 	defer conn.Close()
-	// 读取客户端数据
-	connReader := bufio.NewReader(conn)
-	httpFirstLine, err := connReader.ReadBytes('\n')
-	if err != nil {
-		return
-	}
-	// 解析http请求头
-	var method, host string
-	fmt.Sscanf(string(httpFirstLine), "%s%s", &method, &host)
-	if globalProxy == "on" {
-		// 全局科学代理
-		hideProxy(httpFirstLine, host, method, conn, connReader)
-		return
-	}
+
 	// 添加用户自定义规则
 	if len(userPac) > 0 {
 		pac.AddRules(userPac)
 	}
-	// pac黑名单判断
-	if pac.InBlack(host) {
-		// 科学代理
-		hideProxy(httpFirstLine, host, method, conn, connReader)
+
+	if globalProxy == "on" {
+		proxy(conn, "auto")
 	} else {
-		// 正常代理
-		defaultProxy(httpFirstLine, host, method, conn, connReader)
+		proxy(conn, "all")
 	}
-	// 正常代理
-	defaultProxy(httpFirstLine, host, method, conn, connReader)
 }
