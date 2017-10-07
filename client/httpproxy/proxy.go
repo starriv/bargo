@@ -53,13 +53,13 @@ func proxy(conn net.Conn, mode string) {
 				if curPackLen > 0 {
 					// 连接远端
 					if remoteConn == nil {
-						if mode == "auto" {
+						if mode == "off" { // 自动模式
 							if pac.InBlack(url) {
 								remoteConn, err = linkToSocksRemote(conn, method, url)
 							} else {
 								remoteConn, err = linkToRemote(conn, method, url)
 							}
-						} else {
+						} else { // 全局模式
 							remoteConn, err = linkToSocksRemote(conn, method, url)
 						}
 						if err != nil {

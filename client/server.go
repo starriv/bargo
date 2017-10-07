@@ -4,6 +4,7 @@ import (
 	"log"
 	"net"
 
+	"github.com/dawniii/bargo/config"
 	"github.com/dawniii/bargo/util"
 )
 
@@ -17,11 +18,12 @@ var serverHost string
 var serverPort string
 
 // 开始服务
-func Start(sHost, sPort, clientPort, key string) {
+func Start() {
 	// 初始化参数
-	serverHost = sHost
-	serverPort = sPort
-
+	serverHost = *config.ServerHost
+	serverPort = *config.ServerPort
+	clientPort := *config.ClientPort
+	key := *config.Key
 	// 协议解析器
 	encryptor := util.NewEncryptor([]byte(key))
 	protocol = util.NewProtocol(encryptor)

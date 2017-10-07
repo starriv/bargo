@@ -1,17 +1,22 @@
 package server
 
 import (
-	"github.com/dawniii/bargo/util"
 	"log"
 	"net"
 	"strconv"
+
+	"github.com/dawniii/bargo/config"
+	"github.com/dawniii/bargo/util"
 )
 
 // 协议解析器
 var protocol *util.Protocol
 
 // 开始服务
-func Start(port, key, connLimitNum string) {
+func Start() {
+	port := *config.ServerPort
+	key := *config.Key
+	connLimitNum := *config.ConnectLimt
 	// conn limit
 	climit, err := strconv.Atoi(connLimitNum)
 	if err != nil {
