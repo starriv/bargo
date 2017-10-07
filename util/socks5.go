@@ -26,14 +26,14 @@ func NewSocks5Head(data []byte) (Socks5Head, error) {
 		err = fmt.Errorf("Bad socks version")
 		return s, err
 	}
-	// 获得地址和端口
-	s.Addr, s.Port, err = getAddrPort(data, int(s.Atyp))
-	if err != nil {
-		return s, err
-	}
 	// 判断连接类型
 	switch s.Cmd {
 	case 1: // tcp
+		// 获得地址和端口
+		s.Addr, s.Port, err = getAddrPort(data, int(s.Atyp))
+		if err != nil {
+			return s, err
+		}
 		return s, nil
 	case 2: // bind
 		err = fmt.Errorf("Not support bind")

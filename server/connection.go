@@ -2,8 +2,8 @@ package server
 
 import (
 	"fmt"
-	"log"
 	"net"
+	"runtime/debug"
 	"time"
 
 	"github.com/dawniii/bargo/util"
@@ -16,7 +16,7 @@ const KeepCloseTime = 30
 func onConnection(conn net.Conn, connCount *util.ConnectionCount) {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Println(err)
+			debug.PrintStack()
 		}
 	}()
 	defer func() {

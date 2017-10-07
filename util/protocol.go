@@ -2,6 +2,7 @@ package util
 
 import (
 	"encoding/binary"
+	"fmt"
 	"io"
 	"net"
 	"time"
@@ -47,7 +48,7 @@ func (p *Protocol) Decode(read io.Reader) ([]byte, error) {
 	size := binary.BigEndian.Uint32(head)
 	// 包异常判断
 	if size > 32*1024 {
-		return nil, err
+		return nil, fmt.Errorf("pack too long")
 	}
 	data := make([]byte, size)
 	_, err = io.ReadFull(read, data)
