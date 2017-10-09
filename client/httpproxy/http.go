@@ -1,11 +1,9 @@
 package httpproxy
 
 import (
-	"log"
-	"net"
-
 	"github.com/dawniii/bargo/config"
 	"github.com/dawniii/bargo/util/pac"
+	"net/http"
 )
 
 // 监听端口
@@ -24,38 +22,12 @@ func Start() {
 	socksPort = *config.ClientPort
 	globalProxy = *config.ClientSysproxy
 	userPac = *config.ClientPac
-	serv, err := net.Listen("tcp", ":"+httpPort)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	defer serv.Close()
-	// 添加用户自定义规则
-	if len(userPac) > 0 {
-		pac.AddRules(userPac)
-	}
-	for {
-		conn, err := serv.Accept()
-		if err != nil {
-			log.Panic(err)
-		}
-
-		go onHttpConnection(conn)
-	}
-}
-
-// 处理每个连接
-func onHttpConnection(conn net.Conn) {
-	defer func() {
-		if err := recover(); err != nil {
-			return
-		}
-	}()
-	defer conn.Close()
 
 	// 添加用户自定义规则
 	if len(userPac) > 0 {
 		pac.AddRules(userPac)
 	}
-
-	proxy(conn, globalProxy)
+	// 启动服务
+	mux := new(BargoHttp)
+	http.ListenAndServe(":"+httpPort, mux)
 }
