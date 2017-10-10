@@ -28,6 +28,6 @@ func Start() {
 		pac.AddRules(userPac)
 	}
 	// 启动服务
-	mux := new(BargoHttp)
+	mux := NewBargoHttp()
 	http.ListenAndServe(":"+httpPort, mux)
 }

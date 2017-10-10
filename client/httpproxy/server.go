@@ -17,13 +17,52 @@ import (
 )
 
 // http代理
-type BargoHttp struct{}
+type BargoHttp struct {
+	nomalTransport *http.Transport
+	hideTransport  *http.Transport
+}
+
+// 获得http代理
+func NewBargoHttp() *BargoHttp {
+	b := new(BargoHttp)
+	b.initTransport()
+	return b
+}
+
+// 初始化传输
+func (b *BargoHttp) initTransport() {
+	// 重置log到标准输出
+	log.SetOutput(os.Stdout)
+	// 正常http传输
+	b.nomalTransport = &http.Transport{
+		Proxy: nil,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       30 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+
+	// 隐藏http传输
+	dialer, _ := proxy.SOCKS5("tcp", "127.0.0.1:"+socksPort, nil, &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	})
+	b.hideTransport = &http.Transport{
+		Proxy:                 nil,
+		Dial:                  dialer.Dial,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       30 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
+}
 
 // 接收http请求
 func (b *BargoHttp) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
-	// 重置log到标准输出
-	log.SetOutput(os.Stdout)
-
 	if globalProxy == "off" { // 智能模式
 		if pac.InBlack(req.URL.Hostname()) {
 			b.hideProxy(rw, req)
@@ -65,10 +104,8 @@ func (b *BargoHttp) nomalProxy(rw http.ResponseWriter, req *http.Request) {
 		client.Close()
 		return
 	} else {
-		// http 代理
-		transport := http.DefaultTransport
 		// 请求远端获得响应
-		res, err := transport.RoundTrip(req)
+		res, err := b.nomalTransport.RoundTrip(req)
 		if err != nil {
 			return
 		}
@@ -116,18 +153,8 @@ func (b *BargoHttp) hideProxy(rw http.ResponseWriter, req *http.Request) {
 		return
 	} else {
 		// http 代理
-		// 配置socks 代理
-		dialer, err := proxy.SOCKS5("tcp", "127.0.0.1:"+socksPort, nil, &net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		})
-		transport := &http.Transport{
-			Proxy:               nil,
-			Dial:                dialer.Dial,
-			TLSHandshakeTimeout: 10 * time.Second,
-		}
 		// 请求远端获得响应
-		res, err := transport.RoundTrip(req)
+		res, err := b.hideTransport.RoundTrip(req)
 		if err != nil {
 			return
 		}
