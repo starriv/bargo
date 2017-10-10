@@ -3,17 +3,18 @@ package httpproxy
 import (
 	"encoding/binary"
 	"fmt"
-	"github.com/dawniii/bargo/util/pac"
-	"golang.org/x/net/proxy"
 	"io"
 	"log"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/dawniii/bargo/util/pac"
 )
 
 // http代理
@@ -47,13 +48,14 @@ func (b *BargoHttp) initTransport() {
 	}
 
 	// 隐藏http传输
-	dialer, _ := proxy.SOCKS5("tcp", "127.0.0.1:"+socksPort, nil, &net.Dialer{
-		Timeout:   30 * time.Second,
-		KeepAlive: 30 * time.Second,
-	})
+	socks5String := "socks5://127.0.0.1:" + socksPort
+	socks5Url, _ := url.Parse(socks5String)
 	b.hideTransport = &http.Transport{
-		Proxy:                 nil,
-		Dial:                  dialer.Dial,
+		Proxy: http.ProxyURL(socks5Url),
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
 		MaxIdleConns:          100,
 		IdleConnTimeout:       30 * time.Second,
 		TLSHandshakeTimeout:   10 * time.Second,
