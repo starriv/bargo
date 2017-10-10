@@ -63,8 +63,8 @@ func GetSocksHost(conn net.Conn) (string, error) {
 	}
 
 	// 加入混淆
-	host := addr + ":" + port + "\n"
-	host += GetRandomString(GetRandInt(100, 1000))
+	host := addr + ":" + port + "\n" + "bargo"
+	host += GetRangRandomString(100, 1000)
 
 	return host, nil
 }

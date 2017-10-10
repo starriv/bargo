@@ -21,3 +21,8 @@ func GetRandomString(l int) string {
 func GetRandInt(min int, max int) int {
 	return min + rand.Intn(max-min)
 }
+
+// 获得范围长度的随机字符串
+func GetRangRandomString(min int, max int) string {
+	return GetRandomString(GetRandInt(min, max))
+}

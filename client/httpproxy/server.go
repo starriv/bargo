@@ -107,6 +107,9 @@ func (b *BargoHttp) nomalProxy(rw http.ResponseWriter, req *http.Request) {
 		client.Close()
 		return
 	} else {
+		// http 代理
+		req.Header.Del("Proxy-Connection")
+		req.Header.Set("Connection", "keep-alive")
 		// 请求远端获得响应
 		res, err := b.nomalTransport.RoundTrip(req)
 		if err != nil {
@@ -156,6 +159,8 @@ func (b *BargoHttp) hideProxy(rw http.ResponseWriter, req *http.Request) {
 		return
 	} else {
 		// http 代理
+		req.Header.Del("Proxy-Connection")
+		req.Header.Set("Connection", "keep-alive")
 		// 请求远端获得响应
 		res, err := b.hideTransport.RoundTrip(req)
 		if err != nil {
