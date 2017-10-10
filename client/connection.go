@@ -6,6 +6,8 @@ import (
 	"log"
 	"net"
 	"time"
+
+	"github.com/dawniii/bargo/util"
 )
 
 // 连接超时关闭时间
@@ -46,9 +48,10 @@ func onConnection(conn net.Conn) {
 
 // 创建远程连接
 func NewRemoteConn(conn net.Conn) (net.Conn, error) {
-	buf := make([]byte, 1024)
-	length, err := conn.Read(buf)
+	// 读取socks5 请求头
+	host, err := util.GetSocksHost(conn)
 	if err != nil {
+		conn.Write([]byte{0x05, 0x02, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
 		return nil, err
 	}
 	// 建立远程连接
@@ -58,17 +61,18 @@ func NewRemoteConn(conn net.Conn) (net.Conn, error) {
 		return nil, err
 	}
 	// 向server端加密发送链接信息
-	data := protocol.Encode(buf[:length])
+	data := protocol.Encode([]byte(host))
 	_, err = remoteConn.Write(data)
 	if err != nil {
 		return nil, err
 	}
 	// 接收服务端的转发握手
-	handdata, err := protocol.Decode(remoteConn)
+	handData, err := protocol.Decode(remoteConn)
 	if err != nil {
 		return nil, fmt.Errorf("not recv remote hander")
 	}
-	if string(handdata) == "bargo" {
+	hand := string(handData[:5])
+	if string(hand) == "bargo" {
 		// 响应客户端消息
 		_, err = conn.Write([]byte{0x05, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00})
 		if err != nil {

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/dawniii/bargo/util"
+	"strings"
 )
 
 // 连接超时关闭时间
@@ -48,22 +49,24 @@ func onConnection(conn net.Conn, connCount *util.ConnectionCount) {
 // 创建远程连接
 func NewRemoteConn(conn net.Conn) (net.Conn, error) {
 	// 客户端发来的第一条消息
-	firstData, err := protocol.Decode(conn)
+	hostData, err := protocol.Decode(conn)
 	if err != nil {
 		return nil, err
 	}
-	// 解析socks5协议头
-	socks5Head, err := util.NewSocks5Head(firstData)
-	if err != nil {
-		return nil, err
+	// 获得请求地址
+	hostIndex := strings.Index(string(hostData), "\n")
+	if hostIndex == -1 {
+		return nil, fmt.Errorf("bad host")
 	}
+	host := string(hostData[:hostIndex])
 	// 建立远程连接
-	remoteConn, err := net.DialTimeout("tcp", fmt.Sprintf("%s:%s", socks5Head.Addr, socks5Head.Port), KeepCloseTime*time.Second)
+	remoteConn, err := net.DialTimeout("tcp", host, KeepCloseTime*time.Second)
 	if err != nil {
 		return nil, err
 	}
 	// 远程连接建立成功 告诉客户端可以开始转发
-	_, err = conn.Write(protocol.Encode([]byte("bargo")))
+	hand := "bargo" + string(hostData[hostIndex:])
+	_, err = conn.Write(protocol.Encode([]byte(hand)))
 	if err != nil {
 		return nil, err
 	}
