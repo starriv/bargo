@@ -59,11 +59,9 @@ func NewRemoteConn(conn net.Conn) (net.Conn, error) {
 		return nil, fmt.Errorf("bad host")
 	}
 	host := string(hostData[:hostIndex])
+	suffix := string(hostData[hostIndex+1 : hostIndex+6])
 	// 验证后缀
-	if string(hostData[hostIndex+1:hostIndex+6]) != "bargo" {
-		// 远程连接建立失败
-		hand := "error" + string(hostData[hostIndex:])
-		conn.Write(protocol.Encode([]byte(hand)))
+	if suffix != "bargo" {
 		return nil, fmt.Errorf("bad host suffix")
 	}
 	// 建立远程连接
